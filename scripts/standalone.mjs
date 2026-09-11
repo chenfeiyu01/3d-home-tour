@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const root=path.resolve(import.meta.dirname,'..');
+let html=fs.readFileSync(path.join(root,'dist/index.html'),'utf8');
+const jsPath=html.match(/<script[^>]+src="([^"]+)"[^>]*><\/script>/)[1];
+const cssPath=html.match(/<link[^>]+href="([^"]+\.css)"[^>]*>/)[1];
+const image='data:image/png;base64,'+fs.readFileSync(path.join(root,'public/floorplan-reference.png')).toString('base64');
+let js=fs.readFileSync(path.join(root,'dist',jsPath.replace(/^\//,'')),'utf8').replaceAll('./floorplan-reference.png',image).replaceAll('</script','<\\/script');
+const css=fs.readFileSync(path.join(root,'dist',cssPath.replace(/^\//,'')),'utf8');
+html=html.replace(/<script[^>]+src="[^"]+"[^>]*><\/script>/,()=>`<script type="module">${js}</script>`).replace(/<link[^>]+href="[^\"]+\.css"[^>]*>/,()=>`<style>${css}</style>`);
+fs.writeFileSync(path.join(root,'dist/standalone.html'),html);
+fs.writeFileSync(path.join(root,'../栖居3D.html'),html);
+console.log('Created standalone offline HTML ('+Math.round(Buffer.byteLength(html)/1024)+' KB).');
